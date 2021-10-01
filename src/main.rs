@@ -1,4 +1,5 @@
 use std::io;
+use std::io::Write;
 
 enum Mode {
     ToFahrenheit,
@@ -7,6 +8,7 @@ enum Mode {
 
 enum Action {
     Convert(Mode),
+    Help,
     Quit,
 }
 
@@ -39,45 +41,42 @@ fn to_celsius(temperature: &Temperature) -> Temperature {
 
 fn main() {
     loop {
-        let mut action = String::new();
+        let mut input = String::new();
 
-        println!("Select action:");
-        println!("1. Convert from celsius to fahrenheit");
-        println!("2. Convert from fahrenheit to celsius");
-        println!("3. Quit");
+        print!("> ");
+        io::stdout().flush().unwrap();
 
         io::stdin()
-            .read_line(&mut action)
+            .read_line(&mut input)
             .expect("Failed to read line");
-        let action: &str = action.trim();
+        let input: &str = &input.trim().to_lowercase();
 
-        let action: Option<Action> = if action == "1" {
-            Some(Action::Convert(Mode::ToFahrenheit))
-        } else if action == "2" {
-            Some(Action::Convert(Mode::ToCelsius))
-        } else if action == "3" {
+        let action: Option<Action> = if input == "quit" {
             Some(Action::Quit)
+        } else if input == "help" {
+            Some(Action::Help)
+        } else if input.ends_with("c") {
+            Some(Action::Convert(Mode::ToFahrenheit))
+        } else if input.ends_with("f") {
+            Some(Action::Convert(Mode::ToCelsius))
         } else {
             None
         };
 
         match action {
             None => {
-                println!("Unknown action");
+                println!("Unrecognized input. Type `help` to get some hints.");
             },
             Some(action) => {
                 match action {
                     Action::Quit => break,
+                    Action::Help => {
+                        println!("Enter temperature with a unit (C for Celsius, F for Fahrenheit).");
+                        println!("Type `help` to display this message");
+                        println!("Type `quit` to leave the program.");
+                    },
                     Action::Convert(mode) => {
-                        let mut input = String::new();
-
-                        println!("Enter temperature:");
-                        io::stdin()
-                            .read_line(&mut input)
-                            .expect("Failed to read line");
-
-                        let input: &str = input.trim();
-
+                        let input: &str = input[..input.len()-1].trim();
                         let temperature: f64 = match input.parse() {
                             Ok(num) => num,
                             Err(_) => continue,
@@ -90,7 +89,6 @@ fn main() {
                         let result = convert(mode, &temperature);
 
                         println!("{:?} => {:?}", temperature, result);
-                        println!("----------");
                     }
                 }
             }
