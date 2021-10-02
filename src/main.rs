@@ -1,42 +1,20 @@
 use std::io;
 use std::io::Write;
+use tconv::*;
 
-enum Mode {
-    ToFahrenheit,
-    ToCelsius
+
+fn print_help() {
+    println!("Enter temperature with a unit (C for Celsius, F for Fahrenheit).");
+    println!("Type `help` to display this message");
+    println!("Type `quit` to leave the program.");
 }
 
-enum Action {
-    Convert(Mode),
-    Help,
-    Quit,
+fn print_unrecognized() {
+    println!("Unrecognized input. Type `help` to get some hints.");
 }
 
-#[derive(Debug)]
-enum Temperature {
-    Celsius(f64),
-    Fahrenheit(f64),
-}
-
-fn convert(mode: Mode, temperature: &Temperature) -> Temperature {
-    match mode {
-        Mode::ToFahrenheit => to_fahrenheit(&temperature),
-        Mode::ToCelsius => to_celsius(&temperature),
-    }
-}
-
-fn to_fahrenheit(temperature: &Temperature) -> Temperature {
-    match temperature {
-        Temperature::Celsius(value) => Temperature::Fahrenheit(*value * 1.8 + 32.0),
-        Temperature::Fahrenheit(value) => Temperature::Fahrenheit(*value),
-    }
-}
-
-fn to_celsius(temperature: &Temperature) -> Temperature {
-    match temperature {
-        Temperature::Celsius(value) => Temperature::Celsius(*value),
-        Temperature::Fahrenheit(value) => Temperature::Celsius((*value - 32.0)/1.8),
-    }
+fn print_result(temperature: &Temperature, result: &Temperature) {
+    println!("{:?} => {:?}", temperature, result);
 }
 
 fn main() {
@@ -65,15 +43,13 @@ fn main() {
 
         match action {
             None => {
-                println!("Unrecognized input. Type `help` to get some hints.");
+                print_unrecognized();
             },
             Some(action) => {
                 match action {
                     Action::Quit => break,
                     Action::Help => {
-                        println!("Enter temperature with a unit (C for Celsius, F for Fahrenheit).");
-                        println!("Type `help` to display this message");
-                        println!("Type `quit` to leave the program.");
+                        print_help();
                     },
                     Action::Convert(mode) => {
                         let input: &str = input[..input.len()-1].trim();
@@ -88,7 +64,7 @@ fn main() {
                         };
                         let result = convert(mode, &temperature);
 
-                        println!("{:?} => {:?}", temperature, result);
+                        print_result(&temperature, &result)
                     }
                 }
             }
