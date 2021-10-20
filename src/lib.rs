@@ -1,37 +1,68 @@
 pub enum Mode {
     ToFahrenheit,
-    ToCelsius
+    ToCelsius,
 }
 
-pub enum Action {
-    Convert(Mode),
-    Help,
-    Quit,
-}
-
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum Temperature {
     Celsius(f64),
     Fahrenheit(f64),
 }
 
-pub fn convert(mode: Mode, temperature: &Temperature) -> Temperature {
-    match mode {
-        Mode::ToFahrenheit => to_fahrenheit(&temperature),
-        Mode::ToCelsius => to_celsius(&temperature),
+impl Temperature {
+    pub fn convert(&self, mode: Mode) -> Temperature {
+        match mode {
+            Mode::ToFahrenheit => self.to_fahrenheit(),
+            Mode::ToCelsius => self.to_celsius(),
+        }
+    }
+
+    fn to_fahrenheit(&self) -> Temperature {
+        match self {
+            Temperature::Celsius(value) => Temperature::Fahrenheit(*value * 1.8 + 32.0),
+            Temperature::Fahrenheit(value) => Temperature::Fahrenheit(*value),
+        }
+    }
+
+    fn to_celsius(&self) -> Temperature {
+        match self {
+            Temperature::Celsius(value) => Temperature::Celsius(*value),
+            Temperature::Fahrenheit(value) => Temperature::Celsius((*value - 32.0) / 1.8),
+        }
     }
 }
 
-pub fn to_fahrenheit(temperature: &Temperature) -> Temperature {
-    match temperature {
-        Temperature::Celsius(value) => Temperature::Fahrenheit(*value * 1.8 + 32.0),
-        Temperature::Fahrenheit(value) => Temperature::Fahrenheit(*value),
-    }
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-pub fn to_celsius(temperature: &Temperature) -> Temperature {
-    match temperature {
-        Temperature::Celsius(value) => Temperature::Celsius(*value),
-        Temperature::Fahrenheit(value) => Temperature::Celsius((*value - 32.0)/1.8),
+    #[test]
+    fn celsius_to_celsius_conversion() {
+        let temperature = Temperature::Celsius(0.0);
+        assert_eq!(temperature, temperature.to_celsius());
+    }
+
+    #[test]
+    fn fahrenheit_to_fahrenheit_conversion() {
+        let temperature = Temperature::Fahrenheit(0.0);
+        assert_eq!(temperature, temperature.to_fahrenheit());
+    }
+
+    #[test]
+    fn celsius_0_to_fahrenheit_conversion() {
+        let temperature = Temperature::Celsius(0.0);
+        assert_eq!(Temperature::Fahrenheit(32.0), temperature.to_fahrenheit());
+    }
+
+    #[test]
+    fn fahrenheit_0_to_celsius_conversion() {
+        let temperature = Temperature::Fahrenheit(0.0);
+        assert_eq!(Temperature::Celsius(-17.78), temperature.to_celsius());
+    }
+
+    #[test]
+    fn fahrenheit_451_to_celsius_conversion() {
+        let temperature = Temperature::Fahrenheit(451.0);
+        assert_eq!(Temperature::Celsius(232.78), temperature.to_celsius());
     }
 }

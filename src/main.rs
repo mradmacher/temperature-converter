@@ -2,6 +2,11 @@ use std::io;
 use std::io::Write;
 use tconv::*;
 
+enum Action {
+    Convert(Mode),
+    Help,
+    Quit,
+}
 
 fn print_help() {
     println!("Enter temperature with a unit (C for Celsius, F for Fahrenheit).");
@@ -18,6 +23,8 @@ fn print_result(temperature: &Temperature, result: &Temperature) {
 }
 
 fn main() {
+    print_help();
+
     loop {
         let mut input = String::new();
 
@@ -44,30 +51,28 @@ fn main() {
         match action {
             None => {
                 print_unrecognized();
-            },
-            Some(action) => {
-                match action {
-                    Action::Quit => break,
-                    Action::Help => {
-                        print_help();
-                    },
-                    Action::Convert(mode) => {
-                        let input: &str = input[..input.len()-1].trim();
-                        let temperature: f64 = match input.parse() {
-                            Ok(num) => num,
-                            Err(_) => continue,
-                        };
-
-                        let temperature = match mode {
-                            Mode::ToFahrenheit => Temperature::Celsius(temperature),
-                            Mode::ToCelsius => Temperature::Fahrenheit(temperature),
-                        };
-                        let result = convert(mode, &temperature);
-
-                        print_result(&temperature, &result)
-                    }
-                }
             }
+            Some(action) => match action {
+                Action::Quit => break,
+                Action::Help => {
+                    print_help();
+                }
+                Action::Convert(mode) => {
+                    let input: &str = input[..input.len() - 1].trim();
+                    let temperature: f64 = match input.parse() {
+                        Ok(num) => num,
+                        Err(_) => continue,
+                    };
+
+                    let temperature = match mode {
+                        Mode::ToFahrenheit => Temperature::Celsius(temperature),
+                        Mode::ToCelsius => Temperature::Fahrenheit(temperature),
+                    };
+                    let result = temperature.convert(mode);
+
+                    print_result(&temperature, &result)
+                }
+            },
         };
     }
 }
