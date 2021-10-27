@@ -2,12 +2,6 @@ use std::io;
 use std::io::Write;
 use tconv::*;
 
-enum Action {
-    Convert(Mode),
-    Help,
-    Quit,
-}
-
 fn print_help() {
     println!("Enter temperature with a unit (C for Celsius, F for Fahrenheit).");
     println!("Type `help` to display this message");
@@ -34,45 +28,15 @@ fn main() {
         io::stdin()
             .read_line(&mut input)
             .expect("Failed to read line");
-        let input: &str = &input.trim().to_lowercase();
-
-        let action: Option<Action> = if input == "quit" {
-            Some(Action::Quit)
-        } else if input == "help" {
-            Some(Action::Help)
-        } else if input.ends_with("c") {
-            Some(Action::Convert(Mode::ToFahrenheit))
-        } else if input.ends_with("f") {
-            Some(Action::Convert(Mode::ToCelsius))
-        } else {
-            None
-        };
+        let action = Action::parse(&input);
 
         match action {
-            None => {
-                print_unrecognized();
+            Action::Unrecognized => print_unrecognized(),
+            Action::Quit => break,
+            Action::Help => print_help(),
+            Action::Convert(temperature, mode) => {
+                print_result(&temperature, &temperature.convert(mode));
             }
-            Some(action) => match action {
-                Action::Quit => break,
-                Action::Help => {
-                    print_help();
-                }
-                Action::Convert(mode) => {
-                    let input: &str = input[..input.len() - 1].trim();
-                    let temperature: f64 = match input.parse() {
-                        Ok(num) => num,
-                        Err(_) => continue,
-                    };
-
-                    let temperature = match mode {
-                        Mode::ToFahrenheit => Temperature::Celsius(temperature),
-                        Mode::ToCelsius => Temperature::Fahrenheit(temperature),
-                    };
-                    let result = temperature.convert(mode);
-
-                    print_result(&temperature, &result)
-                }
-            },
         };
     }
 }
